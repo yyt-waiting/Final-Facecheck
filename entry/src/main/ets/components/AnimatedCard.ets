@@ -1,22 +1,22 @@
 /**
  * AnimatedCard.ets — 带入场动画的卡片包装器
- * 支持 @BuilderParam 内容投影，组件可见时触发滑入淡入动画。
+ * 支持 @BuilderParam 内容投影，组件进入可视区域时触发滑入淡入动画。
  */
 @Component
 export struct AnimatedCard {
-  @State private translateY: number = 20;
-  @State private opacity: number = 0;
+  @State private cardTranslateY: number = 20;
+  @State private cardOpacity: number = 0;
   @Prop delay: number = 0;
-  @BuilderParam content: () => void = () => {};
+  @BuilderParam content: () => void;
 
   build() {
     Column() {
       this.content()
     }
-    .translate({ y: this.translateY })
-    .opacity(this.opacity)
-    .onVisibleAreaChange([true, false], (isVisible: boolean, currentRatio: number) => {
-      if (isVisible && currentRatio > 0 && this.translateY !== 0) {
+    .translate({ y: this.cardTranslateY })
+    .opacity(this.cardOpacity)
+    .onVisibleAreaChange([0], (ratio: number) => {
+      if (ratio > 0 && this.cardTranslateY !== 0) {
         const d: number = this.delay;
         setTimeout(() => {
           animateTo({
@@ -24,8 +24,8 @@ export struct AnimatedCard {
             curve: Curve.EaseOut,
             delay: d
           }, () => {
-            this.translateY = 0;
-            this.opacity = 1;
+            this.cardTranslateY = 0;
+            this.cardOpacity = 1;
           });
         }, 50);
       }

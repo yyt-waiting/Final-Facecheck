@@ -15,8 +15,8 @@ export struct AnimatedCard {
     }
     .translate({ y: this.cardTranslateY })
     .opacity(this.cardOpacity)
-    .onVisibleAreaChange([0], (ratio: number) => {
-      if (ratio > 0 && this.cardTranslateY !== 0) {
+    .onVisibleAreaChange([0], (isExpanding: boolean, ratio: number) => {
+      if (isExpanding && this.cardTranslateY !== 0) {
         const d: number = this.delay;
         setTimeout(() => {
           animateTo({

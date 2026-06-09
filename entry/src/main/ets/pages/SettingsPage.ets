@@ -12,6 +12,8 @@ struct SettingsPage {
   @State lateMinutes: number = 15;
   @State expandedMode: boolean = false;
   @State isClearing: boolean = false;
+  @State lateBounceY: number = 0;
+  @State thresholdBounceY: number = 0;
 
   private settingsService: SettingsService = SettingsService.getInstance();
   private privacyService: PrivacyService = new PrivacyService();
@@ -163,6 +165,7 @@ struct SettingsPage {
           .fontSize(18)
           .fontWeight(FontWeight.Bold)
           .fontColor('#007DFF')
+          .translate({ y: this.thresholdBounceY })
       }
       .width('100%')
       Slider({
@@ -181,6 +184,15 @@ struct SettingsPage {
           this.settingsService.setFaceThreshold(threshold).catch((error: Error) => {
             Logger.error('保存人脸阈值失败: %{public}s', error.message);
           });
+        })
+        .onChangeEnd((value: number) => {
+          this.faceThreshold = Math.round(value / 1) * 1;
+          this.settingsService.setFaceThreshold(this.faceThreshold).catch((error: Error) => {
+            Logger.error('保存人脸阈值失败: %{public}s', error.message);
+          });
+          this.thresholdBounceY = -3;
+          animateTo({ duration: 80 }, () => { this.thresholdBounceY = 2; });
+          animateTo({ duration: 100, delay: 80 }, () => { this.thresholdBounceY = 0; });
         })
       Row() {
         Text('宽松 60%')
@@ -220,6 +232,7 @@ struct SettingsPage {
           .fontSize(16)
           .fontWeight(FontWeight.Bold)
           .fontColor('#F59E0B')
+          .translate({ y: this.lateBounceY })
       }
       .width('100%')
       Slider({
@@ -238,6 +251,15 @@ struct SettingsPage {
           this.settingsService.setLateMinutes(minutes).catch((error: Error) => {
             Logger.error('保存迟到时间失败: %{public}s', error.message);
           });
+        })
+        .onChangeEnd((value: number) => {
+          this.lateMinutes = Math.round(value / 5) * 5;
+          this.settingsService.setLateMinutes(this.lateMinutes).catch((error: Error) => {
+            Logger.error('保存迟到时间失败: %{public}s', error.message);
+          });
+          this.lateBounceY = -3;
+          animateTo({ duration: 80 }, () => { this.lateBounceY = 2; });
+          animateTo({ duration: 100, delay: 80 }, () => { this.lateBounceY = 0; });
         })
     }
     .width('100%')

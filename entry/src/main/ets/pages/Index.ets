@@ -1,6 +1,9 @@
 import mediaquery from '@ohos.mediaquery';
 import { image } from '@kit.ImageKit';
 import { AppBottomNav } from '../components/AppBottomNav';
+import { AnimatedCard } from '../components/AnimatedCard';
+import { CircleProgress } from '../components/CircleProgress';
+import { StatusPill, StatusType } from '../components/StatusPill';
 import { AttendanceService } from '../services/AttendanceService';
 import { UserService } from '../services/UserService';
 import { OrganizationService } from '../services/OrganizationService';
@@ -18,6 +21,7 @@ import { UserModel } from '../models/UserModel';
 import { Course } from '../models/OrganizationModel';
 import { DateUtils } from '../utils/DateUtils';
 import { Logger } from '../utils/Logger';
+import { Shadows, Radius, Colors } from '../utils/DesignTokens';
 
 interface CheckInActivity {
   id: string;
@@ -54,6 +58,9 @@ struct HomePage {
   @State compactMode: boolean = false;
   @State expandedMode: boolean = false;
   @State checkInActivities: CheckInActivity[] = [];
+  @State buttonScale: number = 1;
+  @State displayScore: number = 0;
+  @State recentPanelOpacity: number = 0;
 
   private attendanceService: AttendanceService = new AttendanceService();
   private userService: UserService = new UserService();
@@ -76,6 +83,12 @@ struct HomePage {
     this.expandedListener.on('change', (result: mediaquery.MediaQueryResult) => {
       this.expandedMode = result.matches;
     });
+    // 触发 recentPanel 淡入动画
+    setTimeout(() => {
+      animateTo({ duration: 400, curve: Curve.EaseOut }, () => {
+        this.recentPanelOpacity = 1;
+      });
+    }, 100);
   }
 
   aboutToDisappear(): void {
@@ -349,6 +362,11 @@ struct HomePage {
       this.checkResultMessage = result.message;
       this.lastScore = result.compareScore ?? 0;
       this.showResult = true;
+      // 触发分数滚动动画
+      this.displayScore = 0;
+      animateTo({ duration: 800, curve: Curve.EaseOut }, () => {
+        this.displayScore = this.lastScore;
+      });
       this.appendCheckInActivity(result.success, result.message, result.compareScore ?? 0);
       if (result.success) {
         await this.loadData();
@@ -406,7 +424,7 @@ struct HomePage {
             .width(230)
             .height('100%')
             .padding(12)
-            .backgroundColor('#F1F3F5')
+            .backgroundColor(Colors.bg)
 
             this.peoplePanel(true)
 
@@ -416,7 +434,7 @@ struct HomePage {
             .width(290)
             .height('100%')
             .padding(12)
-            .backgroundColor('#F1F3F5')
+            .backgroundColor(Colors.bg)
           }
           .layoutWeight(1)
           .width('100%')
@@ -440,7 +458,7 @@ struct HomePage {
       }
       .width('100%')
       .height('100%')
-      .backgroundColor('#F1F3F5')
+      .backgroundColor(Colors.bg)
 
       if (this.showCreateSession) {
         this.createSessionDialog()
@@ -483,6 +501,7 @@ struct HomePage {
           .fontSize(13)
           .backgroundColor('#007DFF')
           .borderRadius(6)
+          .shadow({ radius: 8, color: '#20007DFF', offsetY: 3 })
           .onClick(() => { this.showCreateSession = true; })
       }
     }
@@ -517,6 +536,7 @@ struct HomePage {
           .backgroundColor('#FFF1F0')
           .borderRadius(6)
           .margin({ top: 14 })
+          .shadow({ radius: 5, color: '#20F53B3F', offsetY: 2 })
           .onClick(() => this.endCurrentSession())
       } else {
         Text('暂无进行中的签到')
@@ -532,6 +552,7 @@ struct HomePage {
           .fontSize(13)
           .backgroundColor('#007DFF')
           .borderRadius(6)
+          .shadow({ radius: 8, color: '#20007DFF', offsetY: 3 })
           .onClick(() => { this.showCreateSession = true; })
       }
     }
@@ -539,7 +560,8 @@ struct HomePage {
     .alignItems(HorizontalAlign.Start)
     .padding(16)
     .backgroundColor('#FFFFFF')
-    .borderRadius(8)
+    .borderRadius(12)
+    .shadow({ radius: 15, color: '#1A000000', offsetY: 6 })
     .margin({ bottom: 10 })
   }
 
@@ -554,7 +576,8 @@ struct HomePage {
     .width('100%')
     .padding({ top: 12, bottom: 12 })
     .backgroundColor('#FFFFFF')
-    .borderRadius(8)
+    .borderRadius(12)
+    .shadow({ radius: 15, color: '#1A000000', offsetY: 6 })
     .margin({ bottom: 10 })
   }
 
@@ -572,21 +595,22 @@ struct HomePage {
       this.statRow('迟到', () => this.stats.lateCount, '#F59E0B')
       this.statRow('未签到', () => this.stats.absentCount, '#FF3B30')
       Divider().color('#E5E5E5').margin({ top: 6, bottom: 12 })
-      Text(this.stats.totalUsers > 0
-        ? `${Math.round(this.stats.checkedIn / this.stats.totalUsers * 100)}%`
-        : '0%')
-        .fontSize(30)
-        .fontWeight(FontWeight.Bold)
-        .fontColor('#007DFF')
-      Text('出勤率')
-        .fontSize(12)
-        .fontColor('#989A9C')
-        .margin({ top: 3 })
+      CircleProgress({
+        value: this.stats.totalUsers > 0
+          ? this.stats.checkedIn / this.stats.totalUsers
+          : 0,
+        size: 90,
+        strokeWidth: 9,
+        color: '#007DFF',
+        label: '出勤率'
+      })
+        .width('100%')
     }
     .width('100%')
     .padding(16)
     .backgroundColor('#FFFFFF')
-    .borderRadius(8)
+    .borderRadius(12)
+    .shadow({ radius: 15, color: '#1A000000', offsetY: 6 })
   }
 
   @Builder
@@ -646,7 +670,7 @@ struct HomePage {
       TextInput({ placeholder: '搜索姓名或学号', text: this.searchKeyword })
         .width('100%')
         .height(40)
-        .backgroundColor('#F1F3F5')
+        .backgroundColor(Colors.bg)
         .borderRadius(6)
         .margin({ bottom: 8 })
         .onChange((value: string) => {
@@ -680,7 +704,8 @@ struct HomePage {
     .padding(16)
     .margin(fillHeight ? 12 : { bottom: 10 })
     .backgroundColor('#FFFFFF')
-    .borderRadius(8)
+    .borderRadius(12)
+    .shadow({ radius: 15, color: '#1A000000', offsetY: 6 })
   }
 
   @Builder
@@ -795,10 +820,10 @@ struct HomePage {
         .alignItems(HorizontalAlign.Start)
         .layoutWeight(1)
         if (this.lastScore > 0) {
-          Text(`${(this.lastScore * 100).toFixed(0)}%`)
+          Text(`${Math.round(this.displayScore * 100)}%`)
             .fontSize(18)
             .fontWeight(FontWeight.Bold)
-            .fontColor(this.checkResultSuccess ? '#34C759' : '#FF3B30')
+            .fontColor(this.checkResultSuccess ? '#00B42A' : '#F53F3F')
         }
       }
       .width('100%')
@@ -806,34 +831,48 @@ struct HomePage {
       .backgroundColor(this.checkResultSuccess ? '#EEFAF1' : '#FFF1F0')
       .borderRadius(6)
       .margin({ top: 8 })
+      .opacity(this.showResult ? 1 : 0)
     }
   }
 
   @Builder
   private checkInButton() {
-    Button() {
-      Row() {
-        Image($r('app.media.icon_camera'))
-          .width(19)
-          .height(19)
-          .fillColor('#FFFFFF')
-        Text(this.isChecking ? (this.stepText || '处理中') :
-          (this.selectedUserName ? `为 ${this.selectedUserName} 签到` : '选择人员后刷脸签到'))
-          .fontSize(14)
-          .fontWeight(FontWeight.Medium)
-          .fontColor('#FFFFFF')
-          .margin({ left: 7 })
-          .maxLines(1)
+    Column() {
+      Button() {
+        Row() {
+          Image($r('app.media.icon_camera'))
+            .width(19)
+            .height(19)
+            .fillColor('#FFFFFF')
+          Text(this.isChecking ? (this.stepText || '处理中') :
+            (this.selectedUserName ? `为 ${this.selectedUserName} 签到` : '选择人员后刷脸签到'))
+            .fontSize(14)
+            .fontWeight(FontWeight.Medium)
+            .fontColor('#FFFFFF')
+            .margin({ left: 7 })
+            .maxLines(1)
+        }
       }
+      .width('100%')
+      .height(48)
+      .type(ButtonType.Normal)
+      .backgroundColor(this.selectedUserId >= 0 && !this.isChecking ? '#007DFF' : '#B8C1CC')
+      .borderRadius(6)
+      .shadow(this.selectedUserId >= 0 && !this.isChecking ? { radius: 8, color: '#20007DFF', offsetY: 3 } : { radius: 0, color: 'transparent', offsetY: 0 })
+      .enabled(this.selectedUserId >= 0 && !this.isChecking)
+      .onClick(() => this.handleFaceCheckIn())
     }
     .width('100%')
-    .height(48)
-    .type(ButtonType.Normal)
-    .backgroundColor(this.selectedUserId >= 0 && !this.isChecking ? '#007DFF' : '#B8C1CC')
-    .borderRadius(6)
+    .scale({ x: this.buttonScale, y: this.buttonScale })
+    .onTouch((event: TouchEvent) => {
+      if (this.selectedUserId < 0 || this.isChecking) return;
+      if (event.type === TouchType.Down) {
+        animateTo({ duration: 80 }, () => { this.buttonScale = 0.96; });
+      } else {
+        animateTo({ duration: 150, curve: Curve.EaseOut }, () => { this.buttonScale = 1; });
+      }
+    })
     .margin({ top: 10 })
-    .enabled(this.selectedUserId >= 0 && !this.isChecking)
-    .onClick(() => this.handleFaceCheckIn())
   }
 
   @Builder
@@ -906,42 +945,46 @@ struct HomePage {
           .padding({ top: 28, bottom: 28 })
       } else {
         List() {
-          ForEach(this.checkInActivities.slice(0, 30), (activity: CheckInActivity) => {
+          ForEach(this.checkInActivities.slice(0, 30), (activity: CheckInActivity, index: number) => {
             ListItem() {
-              Row() {
-                Circle()
-                  .width(7)
-                  .height(7)
-                  .fill(activity.success ? '#34C759' : '#FF3B30')
-                  .margin({ right: dense ? 7 : 9 })
-                Column() {
-                  Text(activity.userName)
-                    .fontSize(dense ? 12 : 13)
-                    .fontWeight(FontWeight.Medium)
-                    .fontColor('#182431')
-                  Text(`${DateUtils.formatTime(activity.time)}${activity.score > 0
-                    ? ` · ${(activity.score * 100).toFixed(0)}%` : ''}`)
-                    .fontSize(dense ? 10 : 11)
-                    .fontColor('#989A9C')
-                    .margin({ top: 3 })
-                  Text(activity.message)
-                    .fontSize(dense ? 10 : 11)
-                    .fontColor(activity.success ? '#52606D' : '#C62828')
-                    .maxLines(2)
-                    .margin({ top: 3 })
+              AnimatedCard({ delay: 40 * index }) {
+                Row() {
+                  Circle()
+                    .width(7)
+                    .height(7)
+                    .fill(activity.success ? '#34C759' : '#FF3B30')
+                    .margin({ right: dense ? 7 : 9 })
+                  Column() {
+                    Text(activity.userName)
+                      .fontSize(dense ? 12 : 13)
+                      .fontWeight(FontWeight.Medium)
+                      .fontColor('#182431')
+                    Text(`${DateUtils.formatTime(activity.time)}${activity.score > 0
+                      ? ` · ${(activity.score * 100).toFixed(0)}%` : ''}`)
+                      .fontSize(dense ? 10 : 11)
+                      .fontColor('#989A9C')
+                      .margin({ top: 3 })
+                    Text(activity.message)
+                      .fontSize(dense ? 10 : 11)
+                      .fontColor(activity.success ? '#52606D' : '#C62828')
+                      .maxLines(2)
+                      .margin({ top: 3 })
+                  }
+                  .layoutWeight(1)
+                  .alignItems(HorizontalAlign.Start)
+                  StatusPill({
+                    status: activity.success ? StatusType.NORMAL : StatusType.FAILED,
+                    text: activity.statusText
+                  })
                 }
-                .layoutWeight(1)
-                .alignItems(HorizontalAlign.Start)
-                Text(activity.statusText)
-                  .fontSize(dense ? 10 : 11)
-                  .fontColor(activity.success ? '#34C759' : '#FF3B30')
+                .width('100%')
+                .padding({ top: dense ? 8 : 10, bottom: dense ? 8 : 10 })
+                .border({ width: { bottom: 0.5 }, color: '#E5E5E5' })
               }
-              .width('100%')
-              .padding({ top: dense ? 8 : 10, bottom: dense ? 8 : 10 })
-              .border({ width: { bottom: 0.5 }, color: '#E5E5E5' })
             }
           }, (activity: CheckInActivity) => activity.id)
         }
+        .opacity(this.recentPanelOpacity)
         .layoutWeight(1)
         .width('100%')
         .scrollBar(BarState.On)
@@ -953,7 +996,8 @@ struct HomePage {
     .layoutWeight(1)
     .padding(dense ? 12 : 16)
     .backgroundColor('#FFFFFF')
-    .borderRadius(8)
+    .borderRadius(12)
+    .shadow({ radius: 15, color: '#1A000000', offsetY: 6 })
     .margin({ top: dense ? 10 : 0 })
   }
 
@@ -1006,7 +1050,7 @@ struct HomePage {
         TextInput({ placeholder: '场次名称（可不填）', text: this.newSessionTitle })
           .width('100%')
           .height(42)
-          .backgroundColor('#F1F3F5')
+          .backgroundColor(Colors.bg)
           .borderRadius(6)
           .onChange((value: string) => { this.newSessionTitle = value; })
         Row() {
@@ -1014,7 +1058,7 @@ struct HomePage {
             .layoutWeight(1)
             .height(42)
             .fontColor('#182431')
-            .backgroundColor('#F1F3F5')
+            .backgroundColor(Colors.bg)
             .borderRadius(6)
             .margin({ right: 6 })
             .onClick(() => { this.showCreateSession = false; })
@@ -1033,7 +1077,8 @@ struct HomePage {
       .constraintSize({ maxHeight: '82%' })
       .padding(22)
       .backgroundColor('#FFFFFF')
-      .borderRadius(8)
+      .shadow(Shadows.card)
+      .borderRadius(Radius.card)
     }
     .width('100%')
     .height('100%')

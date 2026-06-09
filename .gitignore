@@ -1,0 +1,39 @@
+/node_modules
+/oh_modules
+/local.properties
+/.env
+/.env.*
+/.idea
+**/build
+/.hvigor*
+/.codex
+/.codex-build
+.cxx
+/.clangd
+/.clang-format
+/.clang-tidy
+**/.test
+/.appanalyzer
+
+# Local HarmonyOS signing material and generated signing configuration
+/build-profile.json5
+*.p12
+*.p7b
+*.cer
+*.pem
+*.key
+*.keystore
+*.jks
+
+# Device test captures may contain names, student numbers, or faces
+/*.jpg
+/*.jpeg
+/*.png
+/*.webp
+
+# Local databases, logs, and exported attendance data
+*.db
+*.sqlite
+*.sqlite3
+*.log
+*.csv

@@ -1,0 +1,24 @@
+{
+  "string": [
+    {
+      "name": "module_desc",
+      "value": "FaceCheck 人脸签到系统"
+    },
+    {
+      "name": "EntryAbility_desc",
+      "value": "FaceCheck 人脸签到应用"
+    },
+    {
+      "name": "EntryAbility_label",
+      "value": "FaceCheck"
+    },
+    {
+      "name": "app_name",
+      "value": "FaceCheck"
+    },
+    {
+      "name": "camera_permission_reason",
+      "value": "用于人脸采集和签到验证"
+    }
+  ]
+}
